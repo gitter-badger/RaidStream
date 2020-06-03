@@ -5,9 +5,15 @@ project(raidstream
 set(CMAKE_VERBOSE_MAKEFILE True)
 set(CMAKE_CXX_STANDARD 17)
 set(RAIDSTREAM_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/raidstream.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/raidfile.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/test.cpp
+        src/RaidStream/crc32/crc32.cpp
+        src/RaidStream/crc32/crc32.hpp
+        src/RaidStream/crc64/crc64.cpp
+        src/RaidStream/RaidStream.hpp
+        src/RaidStream/RaidConfiguration.hpp
+        src/RaidStream/RaidFile.hpp
+        src/RaidStream/RaidFileBlock.hpp
+        src/RaidStream/RaidFileStripe.hpp
+        src/RaidStream/test.cpp
 )
 add_library(raidstream-object OBJECT ${RAIDSTREAM_SOURCES})
 add_library(raidstream-static STATIC $<TARGET_OBJECTS:raidstream-object>)
@@ -31,6 +37,6 @@ target_compile_definitions(raidstream-object PUBLIC "${CMAKE_PLATFORM_TEST}")
 target_compile_definitions(raidstream-static PUBLIC "${CMAKE_PLATFORM_TEST}")
 target_compile_definitions(raidstream-shared PUBLIC "${CMAKE_PLATFORM_TEST}")
 
-add_executable(raidstream-test src/test.cpp)
+add_executable(raidstream-test src/RaidStream/test.cpp)
 target_link_libraries(raidstream-test raidstream-static)
 target_include_directories(raidstream-test SYSTEM PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")

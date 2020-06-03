@@ -2,27 +2,34 @@
 // Created by Jessica Mulein on 6/3/20.
 //
 
-#ifndef RAIDSTREAM_CONFIGURATION_HPP
-#define RAIDSTREAM_CONFIGURATION_HPP
+#ifndef RAIDSTREAM_RAIDCONFIGURATION_HPP
+#define RAIDSTREAM_RAIDCONFIGURATION_HPP
 
 #include <vector>
-#include <raidfile.hpp>
+#include "RaidStream/RaidFile.hpp"
 
 namespace RaidStream {
-    class Configuration {
+    class RaidConfiguration {
     public:
-        Configuration(std::vector<RaidFile> files, std::fstream *stdout = nullptr, std::fstream *stderr = nullptr) {
-            Configuration* This = this;
+        enum RaidType {
+            JBOD,
+            MIRROR,
+            RAID5,
+            RAID6,
+            EXPERIMENTAL
+        };
+        RaidConfiguration(RaidType type, std::vector<RaidFile> files, std::fstream *stdout = nullptr, std::fstream *stderr = nullptr) : _type{type} {
+            RaidConfiguration* This = this;
             for(std::vector<RaidFile>::iterator it = files.begin(); it != files.end(); ++it) {
                 std::error_code ec;
-                uintmax_t fileSize = std::filesystem::file_size(it->Filename(), ec);
+                uintmax_t fileSize = std::filesystem::file_size(it->FileName(), ec);
                 if (ec) {
-                    This->warn("ERROR: " + it->Filename() + ": " + ec.message());
+                    This->warn("ERROR: " + it->FileName() + ": " + ec.message());
                 }
                 if (fileSize > 0) {
                     // if it's empty, its ready to initialize
                     // if it's not, this file has data!
-                    This->warn("WARNING: " + it->Filename() + ": File has existing data");
+                    This->warn("WARNING: " + it->FileName() + ": File has existing data");
                 }
                 switch(it->Type()) {
                     case RaidFile::FileType::DATA:
@@ -40,8 +47,13 @@ namespace RaidStream {
                     default:
                         throw std::invalid_argument("Unexpected RaidFile::FileType");
                 }
-                this->_files.push_back(*it);
+                std::move(files.begin(), it, std::back_inserter(_files));
+                files.erase(files.begin(), it);
             }
+        }
+
+        inline std::vector<RaidFile> Files() {
+            return _files;
         }
 
         inline std::pair<unsigned int, unsigned int> logStats() {
@@ -66,6 +78,7 @@ namespace RaidStream {
             _stderr = fs;
         }
     protected:
+        RaidType _type;
         std::vector<RaidFile> _files;
         std::fstream* _stdout = nullptr;
         std::fstream* _stderr = nullptr;
@@ -79,4 +92,4 @@ namespace RaidStream {
 }
 
 
-#endif //RAIDSTREAM_CONFIGURATION_HPP
+#endif //RAIDSTREAM_RAIDCONFIGURATION_HPP
